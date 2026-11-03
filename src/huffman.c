@@ -1,6 +1,6 @@
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "huffman.h"
 
 // Cria um novo nó na memória
@@ -128,4 +128,66 @@ No *construir_arvore(const unsigned int frequencias[256]) {
     }
 
     return nos[0];
+}
+
+// Percorre a árvore e gera os códigos de cada byte
+static void percorrer_arvore(
+    const No *raiz,
+    char codigos[256][256],
+    char caminho[256],
+    int profundidade
+) {
+
+    if (raiz == NULL) {
+        return;
+    }
+
+    // Verifica se chegou a uma folha
+    if (raiz->esquerda == NULL && raiz->direita == NULL) {
+
+        // Trata o caso de existir apenas um byte
+        if (profundidade == 0) {
+            caminho[0] = '0';
+            caminho[1] = '\0';
+        } else {
+            caminho[profundidade] = '\0';
+        }
+
+        // Armazena o código correspondente ao byte
+        strcpy(codigos[raiz->byte], caminho);
+
+        return;
+    }
+
+    // Percorre o lado esquerdo
+    caminho[profundidade] = '0';
+    percorrer_arvore(
+        raiz->esquerda,
+        codigos,
+        caminho,
+        profundidade + 1
+    );
+
+    // Percorre o lado direito
+    caminho[profundidade] = '1';
+    percorrer_arvore(
+        raiz->direita,
+        codigos,
+        caminho,
+        profundidade + 1
+    );
+}
+
+// Inicializa e gera os códigos de Huffman
+void gerar_codigos(const No *raiz, char codigos[256][256]) {
+
+    char caminho[256];
+
+    // Inicializa os códigos
+    for (int i = 0; i < 256; i++) {
+        codigos[i][0] = '\0';
+    }
+
+    // Inicia o percurso da árvore
+    percorrer_arvore(raiz, codigos, caminho, 0);
 }
