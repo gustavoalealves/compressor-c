@@ -10,7 +10,7 @@ int decisao = 0;
     if (decisao == 1){
 
     }
-    if (decisao == 2){
+    else if(decisao == 2){
 
     }
     else{
