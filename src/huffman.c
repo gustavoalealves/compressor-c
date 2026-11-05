@@ -1,7 +1,18 @@
-
 #include <stdlib.h>
-#include <string.h>
 #include "huffman.h"
+
+// Copia uma string terminada em '\0' (substitui strcpy)
+static void copiar_texto(char *destino, const char *origem) {
+
+    int i = 0;
+
+    while (origem[i] != '\0') {
+        destino[i] = origem[i];
+        i++;
+    }
+
+    destino[i] = '\0';
+}
 
 // Cria um novo nó na memória
 static No *criar_no(unsigned char byte, unsigned int frequencia) {
@@ -154,7 +165,7 @@ static void percorrer_arvore(
         }
 
         // Armazena o código correspondente ao byte
-        strcpy(codigos[raiz->byte], caminho);
+        copiar_texto(codigos[raiz->byte], caminho);
 
         return;
     }

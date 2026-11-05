@@ -1,6 +1,8 @@
+
 #include <stdio.h>
 #include "bitio.h"
 
+/* Inicializa a escrita de bits */
 void bitwriter_init(BitWriter *bw, FILE *arquivo) {
     bw->arquivo = arquivo;
     bw->buffer = 0;
@@ -34,8 +36,7 @@ int bitwriter_write_bit(BitWriter *bw, int bit) {
 }
 
 /* Escreve uma sequência de bits */
-int bitwriter_write_bits(BitWriter *bw,
-                         const char *codigo) {
+int bitwriter_write_bits(BitWriter *bw, const char *codigo) {
     while (*codigo != '\0') {
         if (*codigo != '0' && *codigo != '1') {
             return -1;
@@ -70,7 +71,6 @@ int bitwriter_flush(BitWriter *bw) {
 
     return fflush(bw->arquivo) == 0 ? 0 : -1;
 }
-
 
 /* Inicializa a estrutura de leitura */
 void bitreader_init(BitReader *br, FILE *arquivo) {
@@ -112,9 +112,7 @@ int bitreader_read_bit(BitReader *br) {
 }
 
 /* Lê uma sequência de bits */
-int bitreader_read_bits(BitReader *br,
-                        char *destino,
-                        size_t quantidade) {
+int bitreader_read_bits(BitReader *br, char *destino, size_t quantidade) {
 
     for (size_t i = 0; i < quantidade; i++) {
         int bit = bitreader_read_bit(br);

@@ -1,10 +1,23 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <limits.h>
-#include <string.h>
 #include "descompressao.h"
 #include "bitio.h"
 #include "huffman.h"
+
+// Compara duas assinaturas de 4 bytes (substitui memcmp)
+static int assinatura_valida(const unsigned char *lida,
+                             const unsigned char *esperada) {
+    int i;
+
+    for (i = 0; i < 4; i++) {
+        if (lida[i] != esperada[i]) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
 
 static int eh_folha(const No *no) {
     return no != NULL && no->esquerda == NULL && no->direita == NULL;
@@ -79,7 +92,7 @@ int descomprimir(const char *arquivo_entrada, const char *arquivo_saida) {
 
     unsigned char assinatura[4];
     if (fread(assinatura, 1, sizeof(assinatura), entrada) != sizeof(assinatura) ||
-        memcmp(assinatura, assinatura_esperada, sizeof(assinatura)) != 0) {
+        !assinatura_valida(assinatura, assinatura_esperada)) {
         fclose(entrada);
         return -1;
     }
@@ -121,6 +134,11 @@ int descomprimir(const char *arquivo_entrada, const char *arquivo_saida) {
         );
         if (fclose(saida) != 0) {
             resultado = -1;
+        }
+
+        // Em caso de erro, nao deixa arquivo parcial no disco
+        if (resultado != 0) {
+            remove(arquivo_saida);
         }
     }
 
