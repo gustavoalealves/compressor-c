@@ -2,6 +2,7 @@
 #define bitio_h
 
 #include <stdio.h>
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct{
@@ -37,7 +38,8 @@ void bitreader_init(BitReader *br, FILE *arquivo);
 /* Lê um bit do arquivo. Retorna -1 no fim do arquivo */
 int bitreader_read_bit(BitReader *br);
 
-/* Lê vários bits e os armazena em uma string */
+/* Lê vários bits e os armazena em uma string.
+ * destino precisa ter espaço para quantidade + 1 caracteres. */
 int bitreader_read_bits(BitReader *br,
                         char *destino,
                         size_t quantidade);

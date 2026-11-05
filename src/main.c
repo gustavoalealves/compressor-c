@@ -102,7 +102,9 @@ static int ler_linha(const char *mensagem, char *destino, int tamanho) {
         }
     }
 
-    if (!achou_fim) {
+    /* Ultima linha da entrada sem '\n' (ex.: entrada redirecionada)
+     * e valida: nao e "linha longa demais". */
+    if (!achou_fim && !feof(stdin)) {
         /* linha maior que o buffer: descarta o resto */
         while ((c = getchar()) != '\n' && c != EOF) {
             ;
