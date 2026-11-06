@@ -56,9 +56,9 @@ Os arquivos compactados pelo programa utilizam a extensão .pbz. O arquivo compa
 A eficiência da compressão depende das características do arquivo de entrada. Arquivos com pouca repetição de dados ou que já utilizam algum método de compressão podem não apresentar redução de tamanho. Além disso, o cabeçalho utilizado pelo programa ocupa espaço no arquivo compactado, o que pode fazer com que arquivos pequenos aumentem de tamanho após a compressão.
 
 9. Autores: 
-Gustavo Alexandre Alves da Silva 
-Marinah Chidinma dos Santos Okeke
-Murilo Ticianelli Silva 
+Gustavo Alexandre Alves da Silva,  
+Marinah Chidinma dos Santos Okeke,
+Murilo Ticianelli Silva. 
 Instituição: Universidade Federal do ABC (UFABC)
 Disciplina: MCTA028-15 – Programação Estruturada
 Ano: 2026
