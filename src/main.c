@@ -7,9 +7,7 @@
 #define TAM_CAMINHO 512
 #define EXTENSAO ".pbz"
 
-/* ------------------------------------------------------------------ */
-/* Funcoes auxiliares de texto (sem usar string.h)                     */
-/* ------------------------------------------------------------------ */
+/* nao da pra usar string.h, entao fiz as funcoes de texto na mao */
 
 static int tamanho_texto(const char *texto) {
     int n = 0;
@@ -49,8 +47,7 @@ static int termina_com(const char *texto, const char *sufixo) {
     return 1;
 }
 
-/* Acrescenta a extensao ao nome, se ele ainda nao a tiver.
- * Retorna 0 em caso de sucesso e -1 se nao houver espaco. */
+/* poe a extensao no nome se ele ainda nao tiver. -1 se nao couber */
 static int garantir_extensao(char *nome, int capacidade) {
     int n;
     int i;
@@ -74,14 +71,7 @@ static int garantir_extensao(char *nome, int capacidade) {
     return 0;
 }
 
-/* ------------------------------------------------------------------ */
-/* Entrada de dados                                                    */
-/* ------------------------------------------------------------------ */
-
-/* Mostra a mensagem e le uma linha inteira (aceita espacos).
- * Retorna 0 se leu, -1 se a entrada terminou (EOF).
- * Se a linha for maior que o buffer, descarta o excesso e devolve
- * string vazia, que o chamador trata como invalida. */
+/* le uma linha inteira (aceita espaco no nome). -1 se acabou a entrada */
 static int ler_linha(const char *mensagem, char *destino, int tamanho) {
     int i;
     int c;
@@ -102,10 +92,8 @@ static int ler_linha(const char *mensagem, char *destino, int tamanho) {
         }
     }
 
-    /* Ultima linha da entrada sem '\n' (ex.: entrada redirecionada)
-     * e valida: nao e "linha longa demais". */
+    /* se nao achou o \n e nao e o fim do arquivo, a linha estourou o buffer */
     if (!achou_fim && !feof(stdin)) {
-        /* linha maior que o buffer: descarta o resto */
         while ((c = getchar()) != '\n' && c != EOF) {
             ;
         }
@@ -116,7 +104,7 @@ static int ler_linha(const char *mensagem, char *destino, int tamanho) {
     return 0;
 }
 
-/* Le a opcao do menu. Retorna 1, 2 ou 3; 0 se invalida; -1 em EOF */
+/* retorna 1, 2 ou 3; 0 se invalida; -1 se acabou a entrada */
 static int ler_opcao(void) {
     char linha[32];
 
@@ -131,10 +119,6 @@ static int ler_opcao(void) {
     return 0;
 }
 
-/* ------------------------------------------------------------------ */
-/* Arquivos                                                            */
-/* ------------------------------------------------------------------ */
-
 static int arquivo_existe(const char *caminho) {
     FILE *f = fopen(caminho, "rb");
 
@@ -146,7 +130,6 @@ static int arquivo_existe(const char *caminho) {
     return 1;
 }
 
-/* Obtem o tamanho em bytes. Retorna 0 em sucesso e -1 em erro. */
 static int tamanho_arquivo(const char *caminho, long *tamanho) {
     FILE *f = fopen(caminho, "rb");
     long fim;
@@ -171,7 +154,7 @@ static int tamanho_arquivo(const char *caminho, long *tamanho) {
     return 0;
 }
 
-/* Valida entrada e saida. Retorna 1 se pode prosseguir, 0 se nao. */
+/* 1 se pode seguir, 0 se nao */
 static int validar_caminhos(const char *entrada, const char *saida) {
     char resposta[16];
 
@@ -185,13 +168,12 @@ static int validar_caminhos(const char *entrada, const char *saida) {
         return 0;
     }
 
-    /* O original nunca pode ser sobrescrito */
+    /* nao deixa sobrescrever o original */
     if (textos_iguais(entrada, saida)) {
         printf("O arquivo de saida deve ser diferente do de entrada.\n");
         return 0;
     }
 
-    /* Se a saida ja existe, pede confirmacao */
     if (arquivo_existe(saida)) {
         printf("O arquivo %s ja existe.\n", saida);
 
@@ -208,10 +190,6 @@ static int validar_caminhos(const char *entrada, const char *saida) {
 
     return 1;
 }
-
-/* ------------------------------------------------------------------ */
-/* Operacoes                                                           */
-/* ------------------------------------------------------------------ */
 
 static void executar_compressao(void) {
     char entrada[TAM_CAMINHO];
@@ -247,7 +225,7 @@ static void executar_compressao(void) {
     segundos = (double)(clock() - inicio) / CLOCKS_PER_SEC;
 
     if (resultado != 0) {
-        remove(saida); /* nao deixa arquivo incompleto */
+        remove(saida); /* apaga o arquivo pela metade */
         printf("Erro ao comprimir o arquivo.\n");
         return;
     }
@@ -337,7 +315,7 @@ int main(void) {
                 printf("Saindo...\n");
                 break;
             case -1:
-                /* fim da entrada (EOF): encerra sem loop infinito */
+                /* acabou a entrada, sai pra nao ficar em loop infinito */
                 printf("\nEntrada encerrada.\n");
                 opcao = 3;
                 break;

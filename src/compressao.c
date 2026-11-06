@@ -8,9 +8,8 @@
 #include "bitio.h"
 
 
-/* Escreve o cabecalho do arquivo comprimido */
+/* cabecalho: assinatura + 256 frequencias de 4 bytes (little-endian) */
 static int escrever_cabecalho(FILE *saida, const unsigned int frequencias[256]) {
-    /* Assinatura que identifica o formato Huffman */
     const char assinatura[4] = {'H', 'U', 'F', '1'};
     int i;
 
@@ -18,12 +17,10 @@ static int escrever_cabecalho(FILE *saida, const unsigned int frequencias[256]) 
         return -1;
     }
 
-    /* Escreve as frequencias dos 256 possiveis bytes */
     for (i = 0; i < 256; i++) {
         uint32_t frequencia = (uint32_t) frequencias[i];
         unsigned char bytes[4];
 
-        /* Converte a frequencia para little-endian */
         bytes[0] = frequencia & 0xFF;
         bytes[1] = (frequencia >> 8) & 0xFF;
         bytes[2] = (frequencia >> 16) & 0xFF;
@@ -38,7 +35,8 @@ static int escrever_cabecalho(FILE *saida, const unsigned int frequencias[256]) 
 }
 
 
-/* Grava o cabecalho e os dados codificados (segunda leitura do original) */
+/* escreve o cabecalho e depois le o original de novo trocando cada byte
+ * pelo seu codigo */
 static int escrever_arquivo(FILE *entrada,
                             FILE *saida,
                             const unsigned int frequencias[256],
@@ -60,7 +58,6 @@ static int escrever_arquivo(FILE *entrada,
         }
     }
 
-    /* fgetc tambem devolve EOF em erro de leitura */
     if (ferror(entrada)) {
         printf("Erro ao ler arquivo original.\n");
         return -1;
@@ -75,7 +72,6 @@ static int escrever_arquivo(FILE *entrada,
 }
 
 
-/* Funcao principal de compressao */
 int comprimir(const char *arquivo_entrada, const char *arquivo_saida) {
     unsigned int frequencias[256];
     unsigned long long tamanho_original = 0;
@@ -86,7 +82,7 @@ int comprimir(const char *arquivo_entrada, const char *arquivo_saida) {
     int resultado = -1;
     int i;
 
-    /* Primeira leitura: frequencia de cada byte */
+    /* primeira leitura: conta os bytes */
     if (contar_frequencia(arquivo_entrada, frequencias) != 0) {
         printf("Erro ao ler o arquivo de entrada "
                "(nao abriu, falha de leitura ou arquivo com 4 GiB ou mais).\n");
@@ -97,10 +93,7 @@ int comprimir(const char *arquivo_entrada, const char *arquivo_saida) {
         tamanho_original += frequencias[i];
     }
 
-    /*
-     * Arquivo vazio nao tem arvore (raiz NULL e normal).
-     * Se ha dados e a raiz e NULL, faltou memoria.
-     */
+    /* arquivo vazio nao tem arvore, entao so constroi se tiver dados */
     if (tamanho_original > 0) {
         raiz = construir_arvore(frequencias);
 
@@ -111,7 +104,7 @@ int comprimir(const char *arquivo_entrada, const char *arquivo_saida) {
 
         gerar_codigos(raiz, codigos);
 
-        /* A arvore nao e mais necessaria: so os codigos sao usados */
+        /* depois dos codigos prontos a arvore nao serve mais */
         liberar_arvore(raiz);
     }
 
@@ -129,7 +122,7 @@ int comprimir(const char *arquivo_entrada, const char *arquivo_saida) {
     } else {
         resultado = escrever_arquivo(entrada, saida, frequencias, codigos);
 
-        /* Um erro no fclose pode significar dados nao gravados */
+        /* erro no fclose pode ser dado que nao foi gravado */
         if (fclose(saida) != 0) {
             printf("Erro ao fechar arquivo comprimido.\n");
             resultado = -1;

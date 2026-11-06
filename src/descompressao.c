@@ -5,7 +5,7 @@
 #include "bitio.h"
 #include "huffman.h"
 
-/* Compara duas assinaturas de 4 bytes (substitui memcmp) */
+/* memcmp feito na mao */
 static int assinatura_valida(const unsigned char *lida,
                              const unsigned char *esperada) {
     int i;
@@ -23,11 +23,8 @@ static int eh_folha(const No *no) {
     return no != NULL && no->esquerda == NULL && no->direita == NULL;
 }
 
-/*
- * Le a assinatura e as 256 frequencias do cabecalho.
- * O tamanho original e a soma das frequencias.
- * Retorna 0 em sucesso e -1 se o cabecalho for invalido.
- */
+/* le a assinatura e as 256 frequencias. O tamanho original sai da soma
+ * delas. Retorna -1 se o cabecalho nao for valido. */
 static int ler_cabecalho(FILE *entrada,
                          unsigned int frequencias[256],
                          uint64_t *tamanho_original) {
@@ -59,10 +56,8 @@ static int ler_cabecalho(FILE *entrada,
         *tamanho_original += frequencia;
     }
 
-    /*
-     * A soma das frequencias e a frequencia da raiz da arvore, que e
-     * um unsigned int. Cabecalho com soma maior esta corrompido.
-     */
+    /* a soma vira a frequencia da raiz (unsigned int), entao se passar
+     * disso o cabecalho esta corrompido */
     if (*tamanho_original > UINT_MAX) {
         return -1;
     }
@@ -88,7 +83,7 @@ static int descomprimir_dados(FILE *entrada,
         return 0;
     }
 
-    /* Um unico byte distinto: a arvore e so uma folha */
+    /* um byte so: nao tem bits pra ler, so repete o byte */
     if (eh_folha(raiz)) {
         for (i = 0; i < tamanho_original; i++) {
             if (fputc(raiz->byte, saida) == EOF) {
@@ -101,6 +96,8 @@ static int descomprimir_dados(FILE *entrada,
     bitreader_init(&br, entrada);
     atual = raiz;
 
+    /* anda na arvore bit a bit; ao chegar numa folha escreve e volta pra raiz.
+     * Para pelo tamanho original pra ignorar o preenchimento do ultimo byte. */
     while (bytes_escritos < tamanho_original) {
         int bit = bitreader_read_bit(&br);
 
@@ -142,7 +139,7 @@ int descomprimir(const char *arquivo_entrada, const char *arquivo_saida) {
     if (ler_cabecalho(entrada, frequencias, &tamanho_original) == 0) {
         raiz = construir_arvore(frequencias);
 
-        /* Raiz NULL so e aceitavel quando o original era vazio */
+        /* raiz NULL so vale se o original era vazio */
         if (raiz != NULL || tamanho_original == 0) {
             saida = fopen(arquivo_saida, "wb");
 
@@ -158,7 +155,7 @@ int descomprimir(const char *arquivo_entrada, const char *arquivo_saida) {
                     resultado = -1;
                 }
 
-                /* Em caso de erro, nao deixa arquivo parcial no disco */
+                /* se deu erro, apaga o que foi escrito */
                 if (resultado != 0) {
                     remove(arquivo_saida);
                 }

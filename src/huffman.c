@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "huffman.h"
 
-// Copia uma string terminada em '\0' (substitui strcpy)
+/* strcpy feito na mao */
 static void copiar_texto(char *destino, const char *origem) {
 
     int i = 0;
@@ -14,7 +14,6 @@ static void copiar_texto(char *destino, const char *origem) {
     destino[i] = '\0';
 }
 
-// Cria um novo nó na memória
 static No *criar_no(unsigned char byte, unsigned int frequencia) {
 
     No *novo = malloc(sizeof(No));
@@ -31,7 +30,6 @@ static No *criar_no(unsigned char byte, unsigned int frequencia) {
     return novo;
 }
 
-// Libera recursivamente a memória da árvore
 void liberar_arvore(No *raiz) {
 
     if (raiz == NULL) {
@@ -44,13 +42,12 @@ void liberar_arvore(No *raiz) {
     free(raiz);
 }
 
-// Constrói a árvore de Huffman
 No *construir_arvore(const unsigned int frequencias[256]) {
 
     No *nos[511];
     int quantidade = 0;
 
-    // Cria um nó para cada byte que aparece no arquivo
+    /* um no folha pra cada byte que aparece */
     for (int i = 0; i < 256; i++) {
 
         if (frequencias[i] > 0) {
@@ -73,13 +70,12 @@ No *construir_arvore(const unsigned int frequencias[256]) {
         }
     }
 
-    // Combina os dois nós de menor frequência
+    /* junta sempre os dois de menor frequencia ate sobrar um so */
     while (quantidade > 1) {
 
         int menor1 = -1;
         int menor2 = -1;
 
-        // Procura os dois menores
         for (int i = 0; i < quantidade; i++) {
 
             if (menor1 == -1 ||
@@ -95,11 +91,9 @@ No *construir_arvore(const unsigned int frequencias[256]) {
             }
         }
 
-        // Pega os dois nós encontrados
         No *esquerda = nos[menor1];
         No *direita = nos[menor2];
 
-        // Cria o nó pai com a soma das frequências
         No *pai = criar_no(
             0,
             esquerda->frequencia + direita->frequencia
@@ -114,22 +108,20 @@ No *construir_arvore(const unsigned int frequencias[256]) {
             return NULL;
         }
 
-        // Conecta os filhos ao pai
         pai->esquerda = esquerda;
         pai->direita = direita;
 
-        // Descobre qual índice é maior
+        /* remove os dois do vetor trocando pelo ultimo; o maior indice
+         * tem que sair primeiro senao o outro muda de lugar */
         int maior = (menor1 > menor2) ? menor1 : menor2;
         int menor = (menor1 < menor2) ? menor1 : menor2;
 
-        // Remove os dois nós antigos do vetor
         nos[maior] = nos[quantidade - 1];
         quantidade--;
 
         nos[menor] = nos[quantidade - 1];
         quantidade--;
 
-        // Adiciona o novo nó pai
         nos[quantidade] = pai;
         quantidade++;
     }
@@ -141,7 +133,6 @@ No *construir_arvore(const unsigned int frequencias[256]) {
     return nos[0];
 }
 
-// Percorre a árvore e gera os códigos de cada byte
 static void percorrer_arvore(
     const No *raiz,
     char codigos[256][256],
@@ -153,10 +144,9 @@ static void percorrer_arvore(
         return;
     }
 
-    // Verifica se chegou a uma folha
     if (raiz->esquerda == NULL && raiz->direita == NULL) {
 
-        // Trata o caso de existir apenas um byte
+        /* so tem um byte no arquivo: a raiz e a propria folha, usa "0" */
         if (profundidade == 0) {
             caminho[0] = '0';
             caminho[1] = '\0';
@@ -164,13 +154,11 @@ static void percorrer_arvore(
             caminho[profundidade] = '\0';
         }
 
-        // Armazena o código correspondente ao byte
         copiar_texto(codigos[raiz->byte], caminho);
 
         return;
     }
 
-    // Percorre o lado esquerdo
     caminho[profundidade] = '0';
     percorrer_arvore(
         raiz->esquerda,
@@ -179,7 +167,6 @@ static void percorrer_arvore(
         profundidade + 1
     );
 
-    // Percorre o lado direito
     caminho[profundidade] = '1';
     percorrer_arvore(
         raiz->direita,
@@ -189,16 +176,13 @@ static void percorrer_arvore(
     );
 }
 
-// Inicializa e gera os códigos de Huffman
 void gerar_codigos(const No *raiz, char codigos[256][256]) {
 
     char caminho[256];
 
-    // Inicializa os códigos
     for (int i = 0; i < 256; i++) {
         codigos[i][0] = '\0';
     }
 
-    // Inicia o percurso da árvore
     percorrer_arvore(raiz, codigos, caminho, 0);
 }

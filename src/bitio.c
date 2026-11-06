@@ -1,15 +1,12 @@
-
 #include <stdio.h>
 #include "bitio.h"
 
-/* Inicializa a escrita de bits */
 void bitwriter_init(BitWriter *bw, FILE *arquivo) {
     bw->arquivo = arquivo;
     bw->buffer = 0;
     bw->nbits = 0;
 }
 
-/* Escreve um bit individual */
 int bitwriter_write_bit(BitWriter *bw, int bit) {
     bw->buffer <<= 1;
 
@@ -19,10 +16,7 @@ int bitwriter_write_bit(BitWriter *bw, int bit) {
 
     bw->nbits++;
 
-    /*
-     * Quando o buffer possui 8 bits,
-     * escreve um byte no arquivo.
-     */
+    /* buffer cheio: manda o byte pro arquivo */
     if (bw->nbits == 8) {
         if (fputc(bw->buffer, bw->arquivo) == EOF) {
             return -1;
@@ -35,7 +29,7 @@ int bitwriter_write_bit(BitWriter *bw, int bit) {
     return 0;
 }
 
-/* Escreve uma sequência de bits */
+/* codigo e uma string de '0' e '1' */
 int bitwriter_write_bits(BitWriter *bw, const char *codigo) {
     while (*codigo != '\0') {
         if (*codigo != '0' && *codigo != '1') {
@@ -52,13 +46,9 @@ int bitwriter_write_bits(BitWriter *bw, const char *codigo) {
     return 0;
 }
 
-/* Finaliza a escrita de bits */
+/* completa o ultimo byte com zeros e grava */
 int bitwriter_flush(BitWriter *bw) {
     if (bw->nbits > 0) {
-
-        /*
-         * Completa o último byte com zeros.
-         */
         bw->buffer <<= (8 - bw->nbits);
 
         if (fputc(bw->buffer, bw->arquivo) == EOF) {
@@ -72,20 +62,15 @@ int bitwriter_flush(BitWriter *bw) {
     return fflush(bw->arquivo) == 0 ? 0 : -1;
 }
 
-/* Inicializa a estrutura de leitura */
 void bitreader_init(BitReader *br, FILE *arquivo) {
     br->arquivo = arquivo;
     br->buffer = 0;
     br->nbits = 0;
 }
 
-/* Lê um bit individual */
+/* retorna 0, 1 ou -1 se acabou o arquivo */
 int bitreader_read_bit(BitReader *br) {
 
-    /*
-     * Se não há bits disponíveis,
-     * lê o próximo byte do arquivo.
-     */
     if (br->nbits == 0) {
         int byte = fgetc(br->arquivo);
 
@@ -97,21 +82,15 @@ int bitreader_read_bit(BitReader *br) {
         br->nbits = 8;
     }
 
-    /*
-     * Extrai o bit mais significativo.
-     */
+    /* pega o bit mais da esquerda e empurra o resto */
     int bit = (br->buffer >> 7) & 1;
 
-    /*
-     * Desloca o buffer para o próximo bit.
-     */
     br->buffer <<= 1;
     br->nbits--;
 
     return bit;
 }
 
-/* Lê uma sequência de bits */
 int bitreader_read_bits(BitReader *br, char *destino, size_t quantidade) {
 
     for (size_t i = 0; i < quantidade; i++) {

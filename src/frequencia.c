@@ -20,14 +20,14 @@ int contar_frequencia(const char *nome_arquivo, unsigned int frequencias[256]) {
         frequencias[byte]++;
         total++;
 
-        /* total voltou a zero: o arquivo tem 4 GiB ou mais */
+        /* se o total deu a volta e zerou, o arquivo tem 4 GiB ou mais */
         if (total == 0) {
             fclose(arquivo);
             return -1;
         }
     }
 
-    /* fgetc tambem devolve EOF em erro de leitura */
+    /* o fgetc tambem retorna EOF quando da erro de leitura */
     if (ferror(arquivo)) {
         fclose(arquivo);
         return -1;
